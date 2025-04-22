@@ -3,53 +3,38 @@ const config = require('../config')
 
 cmd({
     on: 'group-participants'
-}, async (conn, mek, m, { from, isGroup, isBotAdmins }) => {
+}, async (conn, mek, m, { from, isGroup, isBotAdmins, groupMetadata }) => {
     try {
-        // Debug log to verify handler is triggered
-        console.log('Group participants event detected:', mek.action)
-        
-        if (!isGroup || !isBotAdmins || config.WELCOME !== "true") {
-            console.log('Conditions not met - exiting')
-            return
-        }
+        if (!isGroup || !isBotAdmins || config.WELCOME !== "true") return;
 
-        const action = mek.action
-        const participants = mek.participants || [mek.participant]
-        const metadata = await conn.groupMetadata(from)
+        const action = mek.update?.action
+        const participants = mek.update?.participants || []
         
-        // Get PKT time (UTC+5)
         const now = new Date()
-        const pktTime = new Date(now.getTime() + (5 * 60 * 60 * 1000))
-        const time = pktTime.toLocaleTimeString('en-US', { 
-            hour12: true, 
-            timeZone: 'UTC' 
-        })
-        const date = pktTime.toLocaleDateString('en-GB', { 
-            timeZone: 'UTC' 
-        })
+        const pktTime = new Date(now.getTime() + (5 * 60 * 60 * 1000)) // PKT = UTC+5
+        const time = pktTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        const date = pktTime.toLocaleDateString('en-GB')
 
         for (const jid of participants) {
-            if (!jid) continue
-            
             const username = jid.split('@')[0]
             let msg = ''
 
-            if (action === 'add' || action === 'invite') {
+            if (action === 'add') {
                 msg = `╭─「 🎊 WELCOME 」\n` +
                       `│\n` +
                       `│ ➤ User: @${username}\n` +
-                      `│ ➤ Group: ${metadata.subject}\n` +
-                      `│ ➤ Members: ${metadata.size}\n` +
+                      `│ ➤ Group: ${groupMetadata.subject}\n` +
+                      `│ ➤ Members: ${groupMetadata.size}\n` +
                       `│ ➤ Time: ${time} (PKT)\n` +
                       `│ ➤ Date: ${date}\n` +
                       `╰─────────────────`
             } 
-            else if (action === 'remove' || action === 'leave') {
+            else if (action === 'remove') {
                 msg = `╭─「 👋 GOODBYE 」\n` +
                       `│\n` +
                       `│ ➤ User: @${username}\n` +
-                      `│ ➤ Group: ${metadata.subject}\n` +
-                      `│ ➤ Members: ${metadata.size}\n` +
+                      `│ ➤ Group: ${groupMetadata.subject}\n` +
+                      `│ ➤ Members: ${groupMetadata.size}\n` +
                       `│ ➤ Time: ${time} (PKT)\n` +
                       `│ ➤ Date: ${date}\n` +
                       `╰─────────────────`
@@ -58,9 +43,9 @@ cmd({
             await conn.sendMessage(from, { 
                 text: msg, 
                 mentions: [jid] 
-            }).catch(e => console.error('Send message error:', e))
+            }).catch(console.error)
         }
     } catch (error) {
-        console.error('Handler error:', error)
+        console.error('Welcome handler error:', error)
     }
 })
