@@ -1,7 +1,7 @@
 {
   "name": "KHAN-MD",
   "description": "Javascript WhatsApp bot made by Jᴀᴡᴀᴅ TᴇᴄʜX",
-  "logo": "https://raw.githubusercontent.com/XdTechPro/KHAN-DATA/refs/heads/main/logo/KHAN.png",
+  "logo": "https://raw.githubusercontent.com/XdTechPro/KHAN-DATA/refs/heads/main/logo/dj.jpg",
   "keywords": ["KHAN-MD"],
   "success_url": "/",
 
@@ -73,7 +73,7 @@
     "AUTO_STATUS_REPLY": {
       "description": "Make it true for auto reply msg on status seen.",
       "required": true,
-      "value": "true"
+      "value": "false"
     }, 
 
     "AUTO_STATUS_MSG": {
@@ -109,6 +109,13 @@
       "value": "true"
       
     },
+
+     "ANTI_LINK_KICK": {
+      "description": "Make it true if you want bot auto remove group link.",
+      "required": true,
+      "value": "false"
+      
+    },
     
     "ANTI_BAD": {
       "description": "Make it true if you want bot auto delete bad words.",
@@ -137,7 +144,7 @@
       "DELETE_LINKS": {
       "description": "remove links from group automatically without removing member",
       "required": false,
-      "value": "true"
+      "value": "false"
     },
     
     "AUTO_RECORDING": {

@@ -11,7 +11,6 @@ const { getBuffer, getGroupAdmins, getRandom, h2k, isUrl, Json, sleep, fetchJson
 const { writeFileSync } = require('fs');
 const path = require('path');
 
-
 cmd({
     pattern: "setprefix",
     alias: ["prefix"],
@@ -110,22 +109,25 @@ async (conn, mek, m, { from, args, isCreator, reply }) => {
 cmd({
     pattern: "always-online",
     alias: ["alwaysonline"],
-    description: "Set bot status to always online or offline.",
+    desc: "Enable or disable the always online mode",
     category: "settings",
     filename: __filename
-},    
+},
 async (conn, mek, m, { from, args, isCreator, reply }) => {
     if (!isCreator) return reply("*📛 ᴏɴʟʏ ᴛʜᴇ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ!*");
 
     const status = args[0]?.toLowerCase();
-    if (!["on", "off"].includes(status)) {
-        return reply("*🫟 ᴇxᴀᴍᴘʟᴇ:  .ᴀʟᴡᴀʏs-ᴏɴʟɪɴᴇ ᴏɴ*");
+    if (status === "on") {
+        config.ALWAYS_ONLINE = "true";
+        await reply("*✅ always online mode is now enabled.*");
+    } else if (status === "off") {
+        config.ALWAYS_ONLINE = "false";
+        await reply("*❌ always online mode is now disabled.*");
+    } else {
+        await reply(`*🛠️ ᴇxᴀᴍᴘʟᴇ: .ᴀʟᴡᴀʏs-ᴏɴʟɪɴᴇ ᴏɴ*`);
     }
-
-    config.ALWAYS_ONLINE = status === "on" ? "true" : "false";
-    await conn.sendPresenceUpdate(status === "on" ? "available" : "unavailable", from);
-    return reply(`Bot is now ${status === "on" ? "online" : "offline"}.`);
 });
+
 //--------------------------------------------
 //  AUTO_RECORDING COMMANDS
 //--------------------------------------------
@@ -386,31 +388,85 @@ async (conn, mek, m, { from, args, isCreator, reply }) => {
 //--------------------------------------------
 //  ANTILINK COMMANDS
 //--------------------------------------------
+
 cmd({
-  pattern: "anti-link",
-  alias: ["antilink"],
-  desc: "Enable or disable anti-link feature in groups",
+  pattern: "antilink",
+  alias: ["antilinks"],
+  desc: "Enable or disable ANTI_LINK in groups",
   category: "group",
   react: "🚫",
   filename: __filename
-}, async (conn, mek, m, { from, l, quoted, body, isCmd, command, args, q, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply }) => {
+}, async (conn, mek, m, { isGroup, isAdmins, isBotAdmins, args, reply }) => {
   try {
-    // Check for group, bot admin, and user admin permissions
     if (!isGroup) return reply('This command can only be used in a group.');
     if (!isBotAdmins) return reply('Bot must be an admin to use this command.');
     if (!isAdmins) return reply('You must be an admin to use this command.');
 
-    // Enable or disable anti-link feature
     if (args[0] === "on") {
       config.ANTI_LINK = "true";
-      await reply("Anti-link feature is now enabled in this group.");
+      reply("✅ ANTI_LINK has been enabled.");
     } else if (args[0] === "off") {
       config.ANTI_LINK = "false";
-      await reply("Anti-link feature is now disabled in this group.");
+      reply("❌ ANTI_LINK has been disabled.");
     } else {
-      await reply(`*Invalid input! Use either 'on' or 'off'. Example:antilink on*`);
+      reply("Usage: *.antilink on/off*");
     }
-  } catch (error) {
-    return reply(`*An error occurred while processing your request.*\n\n_Error:_ ${error.message}`);
+  } catch (e) {
+    reply(`Error: ${e.message}`);
+  }
+});
+
+cmd({
+  pattern: "antilinkkick",
+  alias: ["kicklink"],
+  desc: "Enable or disable ANTI_LINK_KICK in groups",
+  category: "group",
+  react: "⚠️",
+  filename: __filename
+}, async (conn, mek, m, { isGroup, isAdmins, isBotAdmins, args, reply }) => {
+  try {
+    if (!isGroup) return reply('This command can only be used in a group.');
+    if (!isBotAdmins) return reply('Bot must be an admin to use this command.');
+    if (!isAdmins) return reply('You must be an admin to use this command.');
+
+    if (args[0] === "on") {
+      config.ANTI_LINK_KICK = "true";
+      reply("✅ ANTI_LINK_KICK has been enabled.");
+    } else if (args[0] === "off") {
+      config.ANTI_LINK_KICK = "false";
+      reply("❌ ANTI_LINK_KICK has been disabled.");
+    } else {
+      reply("Usage: *.antilinkkick on/off*");
+    }
+  } catch (e) {
+    reply(`Error: ${e.message}`);
+  }
+});
+
+
+cmd({
+  pattern: "deletelink",
+  alias: ["linksdelete"],
+  desc: "Enable or disable DELETE_LINKS in groups",
+  category: "group",
+  react: "❌",
+  filename: __filename
+}, async (conn, mek, m, { isGroup, isAdmins, isBotAdmins, args, reply }) => {
+  try {
+    if (!isGroup) return reply('This command can only be used in a group.');
+    if (!isBotAdmins) return reply('Bot must be an admin to use this command.');
+    if (!isAdmins) return reply('You must be an admin to use this command.');
+
+    if (args[0] === "on") {
+      config.DELETE_LINKS = "true";
+      reply("✅ DELETE_LINKS is now enabled.");
+    } else if (args[0] === "off") {
+      config.DELETE_LINKS = "false";
+      reply("❌ DELETE_LINKS is now disabled.");
+    } else {
+      reply("Usage: *.deletelink on/off*");
+    }
+  } catch (e) {
+    reply(`Error: ${e.message}`);
   }
 });

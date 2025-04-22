@@ -6,9 +6,9 @@ cmd({
   desc: "Owner Only - retrieve quoted message back to user",
   category: "owner",
   filename: __filename
-}, async (client, message, match, { from, isOwner }) => {
+}, async (client, message, match, { from, isCreator }) => {
   try {
-    if (!isOwner) {
+    if (!isCreator) {
       return; // Simply return without any response if not owner
     }
 
