@@ -287,13 +287,12 @@ if (!isReact && config.CUSTOM_REACT === 'true') {
     m.react(randomReaction);
 }
         
-  //==========WORKTYPE============ 
+//==========WORKTYPE============ 
   if(!isOwner && config.MODE === "private") return
   if(!isOwner && isGroup && config.MODE === "inbox") return
   if(!isOwner && !isGroup && config.MODE === "groups") return
    
 // take commands 
-                 
 const events = require('./command')
 const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
 if (isCmd) {
@@ -325,10 +324,11 @@ mek.type === "stickerMessage"
 command.function(conn, mek, m,{from, l, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply})
 } else if (
 command.on === "group-participants" &&
-(mek.type === "participantsUpdate" || mek.type === "groupParticipants")
+mek.type === "group.participants.update"
 ) {
 command.function(conn, mek, m,{from, l, quoted, body, isCmd, command, args, q, text, isGroup, sender, senderNumber, botNumber2, botNumber, pushname, isMe, isOwner, isCreator, groupMetadata, groupName, participants, groupAdmins, isBotAdmins, isAdmins, reply})
 }});
+
 });
 //===================================================   
     conn.decodeJid = jid => {
