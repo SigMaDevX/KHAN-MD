@@ -129,7 +129,56 @@ const port = process.env.PORT || 9090;
     }
   });
   //============================== 
-          
+
+// Anti Status Mention Handler
+conn.ev.on('messages.upsert', async ({ messages }) => {
+  try {
+    const m = messages[0];
+    if (!m.message || !m.message.groupStatusMentionMessage) return;
+
+    const chat = m.key.remoteJid;
+    const user = m.key.participant || m.key.remoteJid;
+    
+    // Get group metadata
+    const metadata = await conn.groupMetadata(chat).catch(() => null);
+    const isGroup = metadata?.id;
+    const isBotAdmin = metadata?.participants.find(p => p.id === conn.user.id)?.admin;
+    const isUserAdmin = metadata?.participants.find(p => p.id === user)?.admin;
+
+    // Check conditions
+    if (!isGroup || isUserAdmin || !isBotAdmin || config.ANTI_STATUS_MENTION !== 'true') return;
+
+    // Initialize warnings
+    if (!global.warnings) global.warnings = {};
+    if (!global.warnings[chat]) global.warnings[chat] = {};
+
+    // Update warning count
+    global.warnings[chat][user] = (global.warnings[chat][user] || 0) + 1;
+    const warnCount = global.warnings[chat][user];
+
+    // Delete the status mention using your exact format
+    await conn.sendMessage(chat, { delete: m.key }, { quoted: m });
+
+    if (warnCount < 2) {
+      // Warning message
+      await conn.sendMessage(chat, {
+        text: `⚠️ @${user.split('@')[0]}! Status mentions not allowed!\n(Warning ${warnCount}/2)`,
+        mentions: [user]
+      });
+    } else {
+      // Remove user
+      await conn.groupParticipantsUpdate(chat, [user], "remove");
+      await conn.sendMessage(chat, {
+        text: `@${user.split('@')[0]} was removed for status mention!`,
+        mentions: [user]
+      });
+      delete global.warnings[chat][user];
+    }
+  } catch (error) {
+    console.error('Anti-status-mention error:', error);
+  }
+});
+	  
   //=============readstatus=======
         
   conn.ev.on('messages.upsert', async(mek) => {
@@ -297,7 +346,62 @@ conn.ev.on("call", async (json) => {
     }
   }
 });	  
-	  
+
+// Add this with your other event handlers (where you have anti-call)
+conn.ev.on('group.participants.update', async (update) => {
+  try {
+    if (config.WELCOME !== "true") return;
+    
+    const { id, participants, action } = update;
+    const metadata = await conn.groupMetadata(id);
+    const isBotAdmin = metadata.participants.find(p => p.id === conn.user.id)?.admin;
+
+    if (!isBotAdmin) return;
+
+    // PKT Time (UTC+5)
+    const now = new Date();
+    const pktTime = new Date(now.getTime() + (5 * 60 * 60 * 1000));
+    const time = pktTime.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      timeZone: 'UTC'
+    });
+    const date = pktTime.toLocaleDateString('en-GB');
+
+    for (const jid of participants) {
+      const username = jid.split('@')[0];
+      let msg = '';
+
+      if (action === 'add') {
+        msg = `╭─「 🎊 WELCOME 」\n` +
+              `│\n` +
+              `│ ➤ User: @${username}\n` +
+              `│ ➤ Group: ${metadata.subject}\n` +
+              `│ ➤ Members: ${metadata.participants.length}\n` +
+              `│ ➤ Time: ${time} (PKT)\n` +
+              `│ ➤ Date: ${date}\n` +
+              `╰─────────────────`;
+      } 
+      else if (action === 'remove') {
+        msg = `╭─「 👋 GOODBYE 」\n` +
+              `│\n` +
+              `│ ➤ User: @${username}\n` +
+              `│ ➤ Group: ${metadata.subject}\n` +
+              `│ ➤ Members: ${metadata.participants.length}\n` +
+              `│ ➤ Time: ${time} (PKT)\n` +
+              `│ ➤ Date: ${date}\n` +
+              `╰─────────────────`;
+      }
+
+      await conn.sendMessage(id, { 
+        text: msg, 
+        mentions: [jid] 
+      }).catch(console.error);
+    }
+  } catch (error) {
+    console.error('Group participants handler error:', error);
+  }
+});	  
         
 //==========WORKTYPE============ 
   if(!isOwner && config.MODE === "private") return
