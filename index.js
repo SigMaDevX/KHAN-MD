@@ -286,12 +286,24 @@ if (!isReact && config.CUSTOM_REACT === 'true') {
     const randomReaction = reactions[Math.floor(Math.random() * reactions.length)];
     m.react(randomReaction);
 }
+
+// Anti Call 	  
+conn.ev.on("call", async (json) => {
+  if (config.ANTI_CALL === 'true') {
+    for (const id of json) {
+      if (id.status === "offer" && !id.isGroup) {
+        await conn.rejectCall(id.id, id.from);
+      }
+    }
+  }
+});	  
+	  
         
 //==========WORKTYPE============ 
   if(!isOwner && config.MODE === "private") return
   if(!isOwner && isGroup && config.MODE === "inbox") return
   if(!isOwner && !isGroup && config.MODE === "groups") return
-   
+	  
 // take commands 
 const events = require('./command')
 const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
